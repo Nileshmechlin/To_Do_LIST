@@ -10,7 +10,6 @@ const Login = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-gj
         axios
             .post('http://localhost:8080/api/user/login', { email, password })
             .then((response) => {

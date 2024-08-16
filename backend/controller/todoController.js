@@ -1,8 +1,6 @@
-
 const Todo = require('../Model/todo');
 
-exports.createTodo = async (req, res) => {
-    console.log(req.body)
+const createTodo = async (req, res) => {
     const { title } = req.body;
     if (!title) {
         return res.status(400).json({ message: 'Title is required' });
@@ -18,7 +16,7 @@ exports.createTodo = async (req, res) => {
     }
 };
 
-exports.getTodos = async (req, res) => {
+const getTodos = async (req, res) => {
     try {
         const todos = await Todo.find();
         res.status(200).json(todos);
@@ -27,7 +25,7 @@ exports.getTodos = async (req, res) => {
     }
 };
 
-exports.getTodoById = async (req, res) => {
+const getTodoById = async (req, res) => {
     try {
         const todo = await Todo.findById(req.params.id);
         if (!todo) {
@@ -39,7 +37,7 @@ exports.getTodoById = async (req, res) => {
     }
 };
 
-exports.updateTodo = async (req, res) => {
+const updateTodo = async (req, res) => {
     try {
         const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!todo) {
@@ -51,7 +49,7 @@ exports.updateTodo = async (req, res) => {
     }
 };
 
-exports.deleteTodo = async (req, res) => {
+const deleteTodo = async (req, res) => {
     try {
         const todo = await Todo.findByIdAndDelete(req.params.id);
         if (!todo) {
@@ -61,4 +59,36 @@ exports.deleteTodo = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+};
+
+const searchTodo = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const search = req.query.search || "";
+
+    try {
+        const count = await Todo.countDocuments({ title: { $regex: search, $options: "i" } });
+        const todos = await Todo.find({ title: { $regex: search, $options: "i" } })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.status(200).json({
+            todos,
+            totalCount: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: page
+        });
+    } catch (error) {
+        console.error('Error in searchTodo:', error);
+        res.status(500).json({ message: 'Error while searching ToDo items.', error: error.message });
+    }
+};
+
+module.exports = {
+    createTodo,
+    getTodos,
+    getTodoById,
+    updateTodo,
+    deleteTodo,
+    searchTodo
 };
